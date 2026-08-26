@@ -454,7 +454,9 @@ function CartDrawer({
 
 /* ── Data ────────────────────────────────────────────────────────────────── */
 const PRODUCTS: Product[] = [
-  { id: 1, name: "Butter Croissant", category: "Viennoiserie", price: 4.50, description: "72 layers of French butter, shatteringly crisp outside and pillowy within.", image: "https://images.unsplash.com/photo-1450862479751-84eeaf2fcca4?w=600&h=480&fit=crop&auto=format", alt: "Seven golden butter croissants on a metal tray", badge: "Best Seller" },
+  // A11Y-SEED 7 (LOW) — redundant alt text: screen readers already announce
+  // the element as an image, so the "Image of" prefix is duplicated noise.
+  { id: 1, name: "Butter Croissant", category: "Viennoiserie", price: 4.50, description: "72 layers of French butter, shatteringly crisp outside and pillowy within.", image: "https://images.unsplash.com/photo-1450862479751-84eeaf2fcca4?w=600&h=480&fit=crop&auto=format", alt: "Image of seven golden butter croissants on a metal tray", badge: "Best Seller" },
   { id: 2, name: "Sourdough Miche", category: "Breads", price: 12.00, description: "78% hydration country loaf, 24-hour cold ferment. Tangy, open crumb, thick crust.", image: "https://images.unsplash.com/photo-1568254183919-78a4f43a2877?w=600&h=480&fit=crop&auto=format", alt: "Artisan breads displayed on wooden bakery shelves" },
   { id: 3, name: "Raspberry Rose Tart", category: "Pastries", price: 8.50, description: "Almond frangipane, fresh raspberries, rosewater custard in a butter tart shell.", image: "https://images.unsplash.com/photo-1534432182912-63863115e106?w=600&h=480&fit=crop&auto=format", alt: "Pastries with chocolate dollops on display in a bakery", badge: "New" },
   { id: 4, name: "Pain au Chocolat", category: "Viennoiserie", price: 5.00, description: "Two batons of Valrhona 70% dark chocolate folded into laminated dough.", image: "https://images.unsplash.com/photo-1597528662465-55ece5734101?w=600&h=480&fit=crop&auto=format", alt: "Croissants and chocolate pastries on a wooden board" },
@@ -576,9 +578,10 @@ export default function App() {
 
       {/* ── Hero ── */}
       <section aria-label="Hero" style={{ position: "relative", minHeight: 440, overflow: "hidden", background: "var(--charcoal)" }}>
+        {/* A11Y-SEED 1 (CRITICAL) — WCAG 1.1.1 Non-text Content:
+            informative image with no alt attribute at all. */}
         <img
           src="https://images.unsplash.com/photo-1568254183919-78a4f43a2877?w=1400&h=560&fit=crop&auto=format"
-          alt="Artisan breads and pastries arranged on wooden bakery shelves"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.55 }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(17,17,17,0.7) 0%, rgba(178,26,55,0.2) 100%)" }} aria-hidden="true" />
@@ -651,7 +654,10 @@ export default function App() {
       </main>
 
       {/* ── Info strip ── */}
-      <section aria-label="Bakery information" style={{ background: "var(--card)", borderTop: "1px solid var(--petal-100)", borderBottom: "1px solid var(--petal-100)" }}>
+      {/* A11Y-SEED 6 (MODERATE) — WCAG 4.1.2 / ARIA: aria-labelledby points at
+          an element id that does not exist anywhere in the document, so the
+          landmark ends up with no accessible name. */}
+      <section aria-labelledby="bakery-info-heading" style={{ background: "var(--card)", borderTop: "1px solid var(--petal-100)", borderBottom: "1px solid var(--petal-100)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 48px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32 }}>
           {[
             { icon: "🌅", label: "Hours", value: "Tue–Sun · 7 am – 2 pm" },
@@ -676,9 +682,11 @@ export default function App() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--teal-deep)" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-            <h2 id="a11y-heading" style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--teal-deep)", margin: 0 }}>
+            {/* A11Y-SEED 5 (MODERATE) — WCAG 1.3.1 Info and Relationships:
+                heading level jumps from h2 straight to h5, skipping h3 and h4. */}
+            <h5 id="a11y-heading" style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--teal-deep)", margin: 0 }}>
               Our Accessibility Commitment
-            </h2>
+            </h5>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {[
@@ -700,7 +708,38 @@ export default function App() {
         <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 14, color: "var(--gray-600)", margin: 0 }}>
           Pétale Boulangerie &amp; Pâtisserie
         </p>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--gray-400)", margin: 0 }}>
+
+        {/* A11Y-SEED 8 (LOW) — WCAG 2.4.4 Link Purpose: link text conveys no
+            destination when read out of context in a links list. */}
+        <a href="#" style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--gray-600)" }}>
+          Click here
+        </a>
+
+        {/* A11Y-SEED 2 (CRITICAL) — WCAG 4.1.2 Name, Role, Value:
+            icon-only button with no accessible name (no text, no aria-label,
+            and the only child is aria-hidden). */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            width: 44, height: 44, borderRadius: "50%", border: "none",
+            background: "var(--secondary)", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--secondary-foreground)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
+
+        {/* A11Y-SEED 3 (SERIOUS) — WCAG 1.4.3 Contrast (Minimum):
+            #ffd9de on the blush background is roughly 1.2:1, far below 4.5:1.
+            A11Y-SEED 4 (LOW) — WCAG 4.1.1: duplicate id, "main-content" is
+            already used by the <main> element above. */}
+        <p
+          id="main-content"
+          style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "#ffd9de", margin: 0 }}
+        >
           © 2026 · All items subject to availability · Rosé Design System
         </p>
       </footer>
