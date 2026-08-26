@@ -452,6 +452,93 @@ function CartDrawer({
   );
 }
 
+/* ── CSAT rating form — JIRA-123 ─────────────────────────────────────────── */
+const CSAT_STARS = [1, 2, 3, 4, 5];
+
+function CsatForm() {
+  const [rating, setRating] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+
+  return (
+    <section
+      aria-labelledby="csat-heading"
+      style={{ padding: "0 48px 64px", maxWidth: 1200, margin: "0 auto" }}
+    >
+      <div style={{
+        background: "var(--card)",
+        border: "1px solid var(--petal-100)",
+        borderRadius: 20,
+        padding: 40,
+        display: "flex", flexDirection: "column", gap: 20,
+        alignItems: "center", textAlign: "center",
+      }}>
+        <h2 id="csat-heading" style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--charcoal)", margin: 0 }}>
+          How was your experience?
+        </h2>
+
+        {submitted ? (
+          <p role="status" style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--teal-deep)", margin: 0 }}>
+            Thank you — we recorded your rating of {rating} out of 5.
+          </p>
+        ) : (
+          <form
+            onSubmit={(e) => { e.preventDefault(); if (rating > 0) setSubmitted(true); }}
+            style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}
+          >
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--gray-600)", margin: 0 }}>
+              Tell us how we did today — it only takes a second.
+            </p>
+
+            {/* A11Y-SEED 9 (CRITICAL) — WCAG 4.1.2 Name, Role, Value: each radio
+                is visually represented by an aria-hidden star glyph and has no
+                <label>, no aria-label and no title, so it is announced with no
+                accessible name at all.
+                A11Y-SEED 10 (SERIOUS) — WCAG 1.3.1 Info and Relationships: the
+                five radios are a group, but there is no fieldset/legend and no
+                role="radiogroup" with a name tying them to the question. */}
+            <div style={{ display: "inline-flex", gap: 4 }}>
+              {CSAT_STARS.map((value) => (
+                <span
+                  key={value}
+                  style={{
+                    position: "relative", display: "inline-flex",
+                    width: 44, height: 44,
+                    alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="csat-rating"
+                    value={value}
+                    checked={rating === value}
+                    onChange={() => setRating(value)}
+                    style={{
+                      position: "absolute", inset: 0,
+                      width: 44, height: 44, margin: 0,
+                      opacity: 0, cursor: "pointer",
+                    }}
+                  />
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      fontSize: 30, lineHeight: 1, pointerEvents: "none",
+                      color: value <= rating ? "var(--primary)" : "var(--gray-200)",
+                    }}
+                  >★</span>
+                </span>
+              ))}
+            </div>
+
+            <PrimaryBtn onClick={() => { if (rating > 0) setSubmitted(true); }} disabled={rating === 0}>
+              Submit rating
+            </PrimaryBtn>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /* ── Data ────────────────────────────────────────────────────────────────── */
 const PRODUCTS: Product[] = [
   // A11Y-SEED 7 (LOW) — redundant alt text: screen readers already announce
@@ -702,6 +789,9 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* ── CSAT rating — JIRA-123 ── */}
+      <CsatForm />
 
       {/* ── Footer ── */}
       <footer style={{ padding: "24px 48px", borderTop: "1px solid var(--petal-100)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
