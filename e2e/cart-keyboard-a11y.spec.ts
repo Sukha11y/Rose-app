@@ -1,4 +1,5 @@
 import {
+  analyzeA11y,
   cartDrawer,
   cartTrigger,
   clearBasketButton,
@@ -18,7 +19,7 @@ const { croissant } = PRODUCTS
  * here rather than a nice-to-have.
  */
 test.describe("Cart drawer keyboard and focus behaviour", () => {
-  test("traps Tab, closes on Escape and returns focus to the trigger", async ({ page }) => {
+  test("traps Tab, closes on Escape and returns focus to the trigger", async ({ page }, testInfo) => {
     await stockBasket(page, croissant.name, 1)
 
     const trigger = cartTrigger(page)
@@ -42,6 +43,10 @@ test.describe("Cart drawer keyboard and focus behaviour", () => {
     await page.keyboard.press("Shift+Tab")
     await expect(clear).toBeFocused()
 
+    // Analyse the modal while it is still open — the closed page is covered
+    // elsewhere, and the dialog markup only exists in this state.
+    await analyzeA11y(page, testInfo, "cart drawer open")
+
     await page.keyboard.press("Escape")
 
     await expect(cartDrawer(page)).toHaveCount(0)
@@ -49,7 +54,7 @@ test.describe("Cart drawer keyboard and focus behaviour", () => {
     await expect(trigger).toBeFocused()
   })
 
-  test("clicking the backdrop closes the drawer without discarding the basket", async ({ page }) => {
+  test("clicking the backdrop closes the drawer without discarding the basket", async ({ page }, testInfo) => {
     await stockBasket(page, croissant.name, 2)
     await openCart(page)
 
@@ -60,5 +65,7 @@ test.describe("Cart drawer keyboard and focus behaviour", () => {
     await expect(cartDrawer(page)).toHaveCount(0)
     await expect(cartTrigger(page)).toHaveAccessibleName("Open order cart, 2 items")
     await expect(cartTrigger(page)).toBeFocused()
+
+    await analyzeA11y(page, testInfo)
   })
 })

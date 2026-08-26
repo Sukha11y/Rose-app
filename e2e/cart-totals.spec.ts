@@ -1,5 +1,6 @@
 import {
   addToOrder,
+  analyzeA11y,
   cartLine,
   expect,
   money,
@@ -18,7 +19,7 @@ const LINE_MICHE = miche.price // 1 × $12.00
 const SUBTOTAL = LINE_CROISSANT + LINE_MICHE // $21.00
 
 test.describe("Cart drawer pricing", () => {
-  test("lists every line with its unit price, line total and a correct subtotal", async ({ page }) => {
+  test("lists every line with its unit price, line total and a correct subtotal", async ({ page }, testInfo) => {
     await stockBasket(page, croissant.name, 2)
     await addToOrder(page, miche.name)
 
@@ -37,9 +38,12 @@ test.describe("Cart drawer pricing", () => {
 
     await expect(subtotalRow(drawer, SUBTOTAL)).toHaveCount(1)
     await expect(placeOrderButton(drawer)).toContainText(money(SUBTOTAL))
+
+    // The open modal drawer is the app's other major surface — analyse it here.
+    await analyzeA11y(page, testInfo, "cart drawer open")
   })
 
-  test("re-totals when a quantity changes inside the drawer", async ({ page }) => {
+  test("re-totals when a quantity changes inside the drawer", async ({ page }, testInfo) => {
     await stockBasket(page, croissant.name, 2)
     await addToOrder(page, miche.name)
 
@@ -55,5 +59,7 @@ test.describe("Cart drawer pricing", () => {
       .toBeVisible()
     await expect(subtotalRow(drawer, updated)).toHaveCount(1)
     await expect(placeOrderButton(drawer)).toContainText(money(updated))
+
+    await analyzeA11y(page, testInfo)
   })
 })

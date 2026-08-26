@@ -1,5 +1,6 @@
 import {
   addToOrder,
+  analyzeA11y,
   cardStepper,
   cartTrigger,
   expect,
@@ -13,7 +14,7 @@ import {
 const { croissant, miche } = PRODUCTS
 
 test.describe("Adding products to the order", () => {
-  test("swaps the card CTA for a stepper and updates the header and order bar", async ({ page }) => {
+  test("swaps the card CTA for a stepper and updates the header and order bar", async ({ page }, testInfo) => {
     await expect(cartTrigger(page)).toHaveAccessibleName("Open order cart")
     await expect(floatingOrderBar(page)).toHaveCount(0)
 
@@ -38,9 +39,12 @@ test.describe("Adding products to the order", () => {
     await expect(floatingOrderBar(page)).toHaveAccessibleName(
       `View order, 2 items, ${money(croissant.price + miche.price)}`,
     )
+
+    // Menu with a populated basket: steppers, badge and order bar all present.
+    await analyzeA11y(page, testInfo)
   })
 
-  test("stepping the quantity back to zero restores the card CTA", async ({ page }) => {
+  test("stepping the quantity back to zero restores the card CTA", async ({ page }, testInfo) => {
     await addToOrder(page, croissant.name)
 
     const stepper = cardStepper(page, croissant.name)
@@ -56,5 +60,8 @@ test.describe("Adding products to the order", () => {
     ).toBeVisible()
     await expect(cartTrigger(page)).toHaveAccessibleName("Open order cart")
     await expect(floatingOrderBar(page)).toHaveCount(0)
+
+    // Menu in its empty-basket resting state.
+    await analyzeA11y(page, testInfo)
   })
 })

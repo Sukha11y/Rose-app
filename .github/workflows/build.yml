@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    name: Playwright E2E + Level CI accessibility analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # This project uses pnpm (pnpm-lock.yaml, .mise.toml), not npm, so the
+      # docs' `npm ci` is replaced by `pnpm install --frozen-lockfile`.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install npm packages
+        run: pnpm install --frozen-lockfile
+        env:
+          # Needed to authenticate against the Level CI private registry
+          # referenced by .npmrc.
+          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright e2e tests
+        run: pnpm exec playwright test
+        env:
+          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+
+      # Collects the reports written to ./level-ci-reports by levelAnalyze()
+      # and submits them to the Level CI API for analysis.
+      - name: Level CI Accessibility Analysis
+        uses: levelaccess/level-ci@main
+        env:
+          LEVEL_CI_TOKEN: ${{ secrets.LEVEL_CI_TOKEN }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

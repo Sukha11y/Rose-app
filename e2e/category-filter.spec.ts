@@ -1,5 +1,6 @@
 import {
   addToOrder,
+  analyzeA11y,
   cardStepper,
   cartTrigger,
   categoryPill,
@@ -14,7 +15,7 @@ import {
 const { croissant, miche } = PRODUCTS
 
 test.describe("Filtering the menu by category", () => {
-  test("narrows the grid and announces the new count", async ({ page }) => {
+  test("narrows the grid and announces the new count", async ({ page }, testInfo) => {
     await expect(productCards(page)).toHaveCount(8)
     await expect(filterAnnouncement(page)).toHaveText("8 products shown")
     await expect(categoryPill(page, "All")).toHaveAttribute("aria-pressed", "true")
@@ -35,13 +36,18 @@ test.describe("Filtering the menu by category", () => {
     await expect(productCard(page, PRODUCTS.tart.name)).toBeVisible()
     await expect(productCard(page, miche.name)).toHaveCount(0)
 
+    // A filtered grid is a distinct rendering — analyse it before resetting.
+    await analyzeA11y(page, testInfo, "filtered to Pastries")
+
     await categoryPill(page, "All").click()
 
     await expect(productCards(page)).toHaveCount(8)
     await expect(filterAnnouncement(page)).toHaveText("8 products shown")
+
+    await analyzeA11y(page, testInfo, "unfiltered grid")
   })
 
-  test("keeps basket quantities when a filtered-out card comes back", async ({ page }) => {
+  test("keeps basket quantities when a filtered-out card comes back", async ({ page }, testInfo) => {
     await addToOrder(page, croissant.name)
     await expect(cartTrigger(page)).toHaveAccessibleName("Open order cart, 1 item")
 
@@ -52,5 +58,7 @@ test.describe("Filtering the menu by category", () => {
 
     await categoryPill(page, "Viennoiserie").click()
     await expect(cardStepper(page, croissant.name).getByText("1", { exact: true })).toBeVisible()
+
+    await analyzeA11y(page, testInfo)
   })
 })

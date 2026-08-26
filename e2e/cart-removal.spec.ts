@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test"
 
 import {
   addToOrder,
+  analyzeA11y,
   cartLine,
   cartTrigger,
   clearBasketButton,
@@ -27,7 +28,7 @@ async function openStockedDrawer(page: Page) {
 }
 
 test.describe("Emptying the basket", () => {
-  test("decrementing a line to zero removes it, then empties the drawer", async ({ page }) => {
+  test("decrementing a line to zero removes it, then empties the drawer", async ({ page }, testInfo) => {
     const drawer = await openStockedDrawer(page)
     const croissantLine = cartLine(drawer, croissant.name)
     const removeCroissant = croissantLine.getByRole("button", { name: `Remove one ${croissant.name}` })
@@ -52,9 +53,12 @@ test.describe("Emptying the basket", () => {
     await expect(placeOrderButton(drawer)).toHaveCount(0)
     await expect(clearBasketButton(drawer)).toHaveCount(0)
     await expect(cartTrigger(page)).toHaveAccessibleName("Open order cart")
+
+    // The drawer's empty state is its own rendering, worth analysing separately.
+    await analyzeA11y(page, testInfo, "empty cart drawer")
   })
 
-  test("clear basket wipes the order and resets the menu cards", async ({ page }) => {
+  test("clear basket wipes the order and resets the menu cards", async ({ page }, testInfo) => {
     const drawer = await openStockedDrawer(page)
 
     await clearBasketButton(drawer).click()
@@ -68,5 +72,7 @@ test.describe("Emptying the basket", () => {
     await expect(
       productCard(page, croissant.name).getByRole("button", { name: `Add ${croissant.name} to order` }),
     ).toBeVisible()
+
+    await analyzeA11y(page, testInfo)
   })
 })

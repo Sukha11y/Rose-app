@@ -17,6 +17,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@level-ci/a11y-playwright": "^0.2.5",
+    "@level-ci/cli": "^0.1.20",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.0.0",

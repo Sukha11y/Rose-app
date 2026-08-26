@@ -1,4 +1,5 @@
-import { test as base, expect, type Locator, type Page } from "@playwright/test"
+import { levelAnalyze, levelSetup } from "@level-ci/a11y-playwright"
+import { test as base, expect, type Locator, type Page, type TestInfo } from "@playwright/test"
 
 /**
  * Shared fixture + locator helpers for the Pétale storefront specs.
@@ -12,7 +13,22 @@ import { test as base, expect, type Locator, type Page } from "@playwright/test"
 /** Product imagery is remote; none of these specs assert on it. */
 const REMOTE_IMAGES = /images\.unsplash\.com/
 
-export const test = base.extend({
+/** Where Level CI writes its accessibility reports. Gitignored. */
+export const LEVEL_CI_REPORT_PATH = "./level-ci-reports"
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Playwright's documented shape for "no extra test-scoped fixtures".
+export const test = base.extend<{}, { levelCi: void }>({
+  // Worker-scoped and automatic: Playwright has no Cypress-style support file,
+  // so this is the equivalent hook — it runs once per worker process before any
+  // test in that worker.
+  levelCi: [
+    async ({}, use) => {
+      levelSetup({ reportPath: LEVEL_CI_REPORT_PATH })
+      await use()
+    },
+    { scope: "worker", auto: true },
+  ],
+
   page: async ({ page }, use) => {
     await page.route(REMOTE_IMAGES, (route) => route.abort())
     await page.goto("/")
@@ -21,6 +37,23 @@ export const test = base.extend({
 })
 
 export { expect }
+
+/**
+ * Runs a Level CI static accessibility analysis of the page's current state.
+ *
+ * Call it at the end of a test (or at any interesting intermediate state —
+ * each call writes its own report). Passing `testInfo` labels the report with
+ * the spec/describe/test titles so the reports are distinguishable in the
+ * Level CI dashboard; `label` distinguishes multiple analyses within one test.
+ */
+export async function analyzeA11y(page: Page, testInfo: TestInfo, label?: string) {
+  const testPath = [...testInfo.titlePath, label].filter(
+    (segment): segment is string => typeof segment === "string" && segment.length > 0,
+  )
+  return levelAnalyze(page, { testPath })
+}
+
+export { levelAnalyze }
 
 export const money = (amount: number) => `$${amount.toFixed(2)}`
 
