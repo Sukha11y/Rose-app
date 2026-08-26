@@ -1,0 +1,10 @@
+{
+  "description": "Showcase bakery products with an intuitive ordering system, allowing customers to easily browse and purchase fresh baked goods online.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
