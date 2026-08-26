@@ -15,29 +15,33 @@ jobs:
 
       # This project uses pnpm (pnpm-lock.yaml, .mise.toml), not npm, so the
       # docs' `npm ci` is replaced by `pnpm install --frozen-lockfile`.
+      # Pinned to match .mise.toml. A floating `10` previously resolved to a
+      # newer patch than the local toolchain and changed .npmrc auth handling.
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.34.3
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
+      # pnpm ignores env-var credentials in the committed .npmrc by design, so
+      # the token has to be written to the trusted user-level config instead.
+      # GitHub masks the secret in logs.
+      - name: Authenticate to the Level CI registry
+        run: pnpm config set --global "//npm.levelaccess.net/level-ci/:_authToken" "$CLOUDSMITH_TOKEN"
+        env:
+          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+
       - name: Install npm packages
         run: pnpm install --frozen-lockfile
-        env:
-          # Needed to authenticate against the Level CI private registry
-          # referenced by .npmrc.
-          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright e2e tests
         run: pnpm exec playwright test
-        env:
-          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
 
       # Collects the reports written to ./level-ci-reports by levelAnalyze()
       # and submits them to the Level CI API for analysis.
